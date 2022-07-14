@@ -6,14 +6,19 @@
  */
 
 class Game{
-  constructor(height, width){
+  constructor(height, width, player1, player2){
     this.height = height
     this.width = width
-    this.currPlayer = 1
+    this.player1 = player1
+    this.player2 = player2
+
+    this.currPlayer = player1
     this.board = []
 
     this.makeBoard()
     this.makeHtmlBoard()
+
+    this.finished = false
     
   }
 
@@ -25,11 +30,13 @@ class Game{
 
   makeHtmlBoard() {
     const board = document.getElementById('board');
+    board.innerHTML = '';
   
     // make column tops (clickable area for adding a piece to that column)
     const top = document.createElement('tr');
     top.setAttribute('id', 'column-top');
-    top.addEventListener('click', this.handleClick.bind(this));
+    this.handleEvent = this.handleClick.bind(this)
+    top.addEventListener('click', this.handleEvent);
   
     for (let x = 0; x < this.width; x++) {
       const headCell = document.createElement('td');
@@ -67,7 +74,7 @@ class Game{
   placeInTable(y, x) {
     const piece = document.createElement('div');
     piece.classList.add('piece');
-    piece.classList.add(`p${this.currPlayer}`);
+    piece.style.backgroundColor = this.currPlayer.color
     piece.style.top = -50 * (y + 2);
     
     const spot = document.getElementById(`${y}-${x}`);
@@ -77,7 +84,11 @@ class Game{
   /** endGame: announce game end */
   
   endGame(msg) {
+    this.finished = true
     alert(msg);
+    const top = document.querySelector("#column-top")
+    top.removeEventListener("click", this.handleEvent)
+    
   }
   
   /** handleClick: handle click of column top to play piece */
@@ -87,7 +98,6 @@ class Game{
     const x = +evt.target.id;
     // get next spot in column (if none, ignore click)
     const y = this.findSpotForCol(x);
-    console.log(y, x)
     if (y === null) {
       return;
     }
@@ -98,7 +108,7 @@ class Game{
     
     // check for win
     if (this.checkForWin()) {
-      return this.endGame(`Player ${this.currPlayer} won!`);
+      return this.endGame(`Player ${this.currPlayer.color} won!`);
     }
     
     // check for tie
@@ -107,7 +117,7 @@ class Game{
     }
       
     // switch players
-    this.currPlayer = this.currPlayer === 1 ? 2 : 1;
+    this.currPlayer = this.currPlayer === this.player1 ? this.player2 : this.player1;
   }
   
   /** checkForWin: check board cell-by-cell for "does a win start here?" */
@@ -147,4 +157,14 @@ class Game{
   
 }
 
-new Game(6, 7)
+class Player{
+  constructor(color){
+    this.color = color
+  }
+}
+
+document.getElementById('start').addEventListener('click', () => {
+  let p1 = new Player(document.getElementById('p1-color').value);
+  let p2 = new Player(document.getElementById('p2-color').value);
+  new Game(6, 7, p1, p2);
+});
